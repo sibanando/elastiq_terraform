@@ -60,7 +60,6 @@ sudo apt install trivy -y
 # Intalling Helm
 #! /bin/bash
 sudo snap install helm --classic
-# EVN variable
 # EKS setup
 #eksctl create cluster --name elastiq-k8s --region us-west-2 --node-type t2.medium --zones us-west-2a,us-west-2b
 #aws eks update-kubeconfig --region us-west-2 --name elastiq-k8s
