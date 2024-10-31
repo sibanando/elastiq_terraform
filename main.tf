@@ -1,14 +1,104 @@
-provider "aws" {
-  region = "us-west-2"
-}
+#Vpc
+module "vpc" {
+  source = "terraform-aws-modules/vpc/aws"
 
-resource "aws_instance" "basiston_instance" {
-  ami           = "ami-04dd23e62ed049936"  # Replace with the latest  AMI ID
-  instance_type = "t2.large"
-  key_name      = "ayush2"
-  subnet_id     = "subnet-0b4f9b02f2327de49"
-  vpc_security_group_ids = ["sg-0bfaccfa0230f6114"]
+  name = "jenkins_vpc"
+  cidr = var.vpc_cidr
+
+  azs            = data.aws_availability_zones.azs.names
+  public_subnets = var.public_subnets
+
+  enable_dns_hostnames    = true
+  map_public_ip_on_launch = true
+
   tags = {
-    Name = "Basiston_EC2_Instance"
+    Name        = "jenkins_vpc"
+    Terraform   = "true"
+    Environment = "dev"
+  }
+  public_subnet_tags = {
+    Name = "jenkins_subnet"
   }
 }
+
+#sg 
+
+module "sg" {
+  source = "terraform-aws-modules/security-group/aws"
+
+  name        = "jenkins_sg"
+  description = "Security group for jenkins server"
+  vpc_id      = module.vpc.vpc_id
+
+
+  ingress_with_cidr_blocks = [
+    {
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      description = "HTTP"
+      cidr_blocks = "0.0.0.0/0"
+    },
+    {
+      from_port   = 22
+      to_port     = 22
+      protocol    = "tcp"
+      description = "SSH"
+      cidr_blocks = "0.0.0.0/0"
+    }
+  ]
+  egress_with_cidr_blocks = [
+    {
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = "0.0.0.0/0"
+    }
+  ]
+  tags = {
+    Name = "jenkins_sg"
+  }
+}
+
+#ec2
+
+module "ec2_instance" {
+  source = "terraform-aws-modules/ec2-instance/aws"
+
+  name = "jenkins_server"
+
+  instance_type               = var.instance_type
+  ami                         = data.aws_ami.example.id
+  key_name                    = "ayush2"
+  monitoring                  = true
+  vpc_security_group_ids      = [module.sg.security_group_id]
+  subnet_id                   = module.vpc.public_subnets[0]
+  associate_public_ip_address = true
+  availability_zone           = data.aws_availability_zones.azs.names[0]
+  user_data                   = file("jenkins-install.sh")
+
+
+  tags = {
+    Name        = "jankins_server"
+    Terraform   = "true"
+    Environment = "dev"
+  }
+}
+
+#S3 backend
+#resource "aws_s3_bucket" "s3_bucket" {
+#  bucket = "testayush" # change this
+#}
+
+resource "aws_dynamodb_table" "terraform_lock" {
+  name         = "terraform-lock"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "LockID"
+
+  attribute {
+    name = "LockID"
+    type = "S"
+  }
+}
+
+
