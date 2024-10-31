@@ -61,17 +61,14 @@ sudo apt install trivy -y
 #! /bin/bash
 sudo snap install helm --classic
 # EVN variable
-export ACCESS_KEY="AKIAZFHJZCKAOHASPIWU"
-export SECRET_KEY="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"
-export REGION="us-west-2"
 # EKS setup
-eksctl create cluster --name elastiq-k8s --region us-west-2 --node-type t2.medium --zones us-west-2a,us-west-2b
-aws eks update-kubeconfig --region us-west-2 --name elastiq-k8s
+#eksctl create cluster --name elastiq-k8s --region us-west-2 --node-type t2.medium --zones us-west-2a,us-west-2b
+#aws eks update-kubeconfig --region us-west-2 --name elastiq-k8s
 #Prometheus and Grafana
-helm repo add stable https://charts.helm.sh/stable
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-kubectl create namespace prometheus
-helm install stable prometheus-community/kube-prometheus-stack -n prometheus
+#helm repo add stable https://charts.helm.sh/stable
+#helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+#kubectl create namespace prometheus
+#helm install stable prometheus-community/kube-prometheus-stack -n prometheus
 #ARGOCD
-kubectl create namespace argocd
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+#kubectl create namespace argocd
+#kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
